@@ -54,12 +54,15 @@ class Arguments:
                 continue
             elif i == '-e' or i == '-element':
                 self.datareq += 100
+                print "Elemental data requested by user."
                 continue
             elif i == '-pos' or i == '-p':
                 self.datareq += 10
+                print "Positional data requested by user."
                 continue
             elif i == '-force' or i == '-f':
                 self.datareq += 1
+                print "Forces requested by user."
                 continue
             elif i == '-n' or i == '-name':
                 self.readmode = 'filename'
@@ -102,11 +105,10 @@ class Output:
         pass
 class Parser:
     """ A general data parser."""
-    atoms = []
-    positions = []
-    forces = []
     def __init__(self, atom, posx, posy, posz, fx, fy, fz):
-        pass
+        self.atoms = []
+        self.positions = []
+        self.forces = []
     def organizedata(self, atom, posx, posy, posz, fx, fy, fz):
         """ A function to organize all the data available.  """
         pass
@@ -117,9 +119,10 @@ class Parser:
 class FileReader:
     """ Selecting the right type of method for reading the files
         given to the program.  """
-    def __init__(self, fname):
+    def __init__(self, fname,handler = '111'):
         self.fname = fname
         self.type = None
+        self.handler = handler
         if self.fname == None:
             quit('No file name specified. use -h or -help for more information.')
         elif re.search(r'-',self.fname,re.I|re.M):
@@ -135,47 +138,44 @@ class FileReader:
         except:
             quit('File not found, please make sure correct filename is given in arguments.')
         f = open(filename,'r')
-        n = 0
-        while n < 10:
-            for i in f.readlines():
-                if re.search(r'vasp',i,re.I):
-                    self.type = 'vasp'
-                    print 'File identified as Vasp file.'
-                    break
-                elif re.search(r'adf',i,re.I):
-                    self.type = 'adf'
-                    print 'File identified as ADF file.'
-                    break
-                elif re.search(r'qe',i,re.I) or re.search(r'Quantum Esspresso',i,re.I):
-                    self.type = 'qe'
-                    print 'File identified as QE file.'
-                    break
-                elif re.search(r'gaussian',i,re.I):
-                    self.type = 'gaussian'
-                    print 'File identified as Gaussian file.'
-                    break
-                n = n + 1
-                if self.type != None:
-                    break
-            n = n + 1
+        for i in f.readlines():
+            if re.search(r'vasp',i,re.I):
+                self.type = 'vasp'
+                print 'File identified as Vasp file.'
+                break
+            elif re.search(r'adf',i,re.I):
+                self.type = 'adf'
+                print 'File identified as ADF file.'
+                break
+            elif re.search(r'qe',i,re.I) or re.search(r'Quantum Esspresso',i,re.I):
+                self.type = 'qe'
+                print 'File identified as QE file.'
+                break
+            elif re.search(r'gaussian',i,re.I):
+                self.type = 'gaussian'
+                print 'File identified as Gaussian file.'
+                break
+            if self.type != None:
+                break
         f.close()
     def read(self):
         if self.type == None:
             quit("No filetype found in the file given to the program. Please make sure that your outputfile is supported. Use '-h' or '-help' to read the help manual. ")
         elif self.type == 'adf':
-            readadf.ReadAdf(self.fname)
+            self.lines = readadf.ReadAdf(self.fname ,self.handler)
         elif self.type == 'vasp':
-            readvasp.ReadVasp(self.fname)
+            self.lines = readvasp.ReadVasp(self.fname ,self.handler)
         elif self.type == 'qe':
-            readqe.ReadQe(self.fname)
+            self.lines = readqe.ReadQe(self.fname ,self.handler)
         elif self.type == 'gaussian':
-            readgaussian.ReadGaussian(self.fname)
+            self.lines = readgaussian.ReadGaussian(self.fname ,self.handler)
         else:
             quit("Filetype handler not equal to known filetypes.")
+        #return self.lines
 def main(inarg):
     arguments = Arguments()
     arguments.readargument(inarg)      
-    fileread = FileReader(arguments.fname)
+    fileread = FileReader(arguments.fname, arguments.datareq)
     fileread.findtype()
-    fileread.read()
+    fileread.read().readfile().getdata()
 main(sys.argv)
