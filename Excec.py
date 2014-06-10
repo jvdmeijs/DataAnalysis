@@ -28,68 +28,57 @@ class Arguments:
         self.readmode = None
         self.fname = None
     def readargument(self,arguments):
-        """ Providing the program with the correct handlers."""
-        self.datareq = 0    # The variable that specifies the requested data.
-                            # 000 => no data
-                            # 100 => only atoms
-                            # 010 => only positions
-                            # 001 => only forces
-                            # 110 => atoms and positions
-                            # 101 => atoms and forces
-                            # 011 => positions and forces
-                            # 111 => all data
+        """ Provide the program with the correct handlers."""
+        self.datareq = str(int('000',2))    # 111 = 7 gives all data
+                                            # 000 = 0 gives no data
+                                            # 001 = 1 gives forces
+                                            # 010 = 2 gives coordinates
+                                            # 100 = 4 gives atoms
+                                            # a sum of the bits gives both the attributes.
         for i in arguments:
             if self.readmode == 'filename':
                 self.fname = i
                 self.readmode = None
                 continue
-            elif i == '-h' or i == '-help':
+            elif i == '-h' or i == '--help':
                 self.help()
                 sys.exit()
             elif i == 'Excec.py':
                 continue
-            elif i == '-all' or i == '-a' or i == '':
+            elif i == '--all' or i == '-a' or i == '':
                 print "All data requested by user."
-                self.datareq = 111
+                self.datareq = str(int(self.datareq) | int('111',2))
                 continue
-            elif i == '-e' or i == '-element':
-                self.datareq += 100
+            elif i == '-e' or i == '--element':
+                self.datareq = str(int(self.datareq) | int('100',2))
                 print "Elemental data requested by user."
                 continue
-            elif i == '-pos' or i == '-p':
-                self.datareq += 10
+            elif i == '--pos' or i == '--p':
+                self.datareq = str(int(self.datareq) | int('10',2))
                 print "Positional data requested by user."
                 continue
-            elif i == '-force' or i == '-f':
-                self.datareq += 1
+            elif i == '--force' or i == '-f':
+                self.datareq = str(int(self.datareq) | int('1',2))
                 print "Forces requested by user."
                 continue
-            elif i == '-n' or i == '-name':
+            elif i == '-n' or i == '--name':
                 self.readmode = 'filename'
                 continue
             else:
                 self.help()
                 sys.exit()
-        if self.datareq >= 100:
-            self.datareq = str(self.datareq)
-        elif self.datareq == 10 or self.datareq == 11:
-            self.datareq = '0' + str(self.datareq)
-        else:
-            self.datareq = '00' + str(self.datareq)
-        if self.datareq not in ['000','100','010','001','110','101','011','111']:
-            quit("Unexpected error in handeling given arguments. use '-h' or '-help' for more information")
     def help(self):
         """  A help function called by using help. """
         print "A short manual for the program:"
         print "You can request different types of data."
-        print "Use '-a' or '-all' to get all data available."
-        print "Use '-f' or '-force' to get all force data"
-        print "Use '-p' or '-pos' to get position data"
-        print "Use '-e' or '-element' to get the atoms as output."
+        print "Use '-a' or '--all' to get all data available."
+        print "Use '-f' or '--force' to get all force data"
+        print "Use '-p' or '--pos' to get position data"
+        print "Use '-e' or '--element' to get the atoms as output."
         print "Further use:"
-        print "Use '-n' or '-name' to specify a file name. Note that this argument is mandatory. Unless you use the '-h' or '-help' argument."
-        print "After the '-n' or '-name' argument a filename must be given."
-        print "Note that more than one handler can be used, with the exeption of -h' and '-help'. The '-a' and -'all' can only be used in comination with '-n' or '-name'."
+        print "Use '-n' or '--name' to specify a file name. Note that this argument is mandatory. Unless you use the '-h' or '--help' argument."
+        print "After the '-n' or '--name' argument a filename must be given."
+        print "Note that more than one handler can be used, with the exeption of -h' and '--help'. The '-a' and '--all' can only be used in comination with '-n' or '--name'."
         print "So if you for example want to request the positions and forces on the file 'out' use: ' -p -f -n out'."
         print "The supported files are at this moment: Vasp, Quantum Esspresso, Gaussian and ADF."
 class Output:
@@ -119,7 +108,7 @@ class Parser:
 class FileReader:
     """ Selecting the right type of method for reading the files
         given to the program.  """
-    def __init__(self, fname,handler = '111'):
+    def __init__(self, fname,handler = 7):
         self.fname = fname
         self.type = None
         self.handler = handler
@@ -128,7 +117,7 @@ class FileReader:
         elif re.search(r'-',self.fname,re.I|re.M):
             quit("Argument specified instead of file name. Please make sure to specify the filename after the '-n' or '-name' argument.")
     def findtype(self):
-        """ The function that determines the file type such as 
+        """ Find out which filetype the output file is, i.e.
             Vasp, Gaussian, Quantum Esspresso or ADF."""
         cwd = os.getcwd()
         filename = cwd + '/' + self.fname
@@ -163,19 +152,23 @@ class FileReader:
             quit("No filetype found in the file given to the program. Please make sure that your outputfile is supported. Use '-h' or '-help' to read the help manual. ")
         elif self.type == 'adf':
             self.lines = readadf.ReadAdf(self.fname ,self.handler)
+            self.lines.readfile()
         elif self.type == 'vasp':
             self.lines = readvasp.ReadVasp(self.fname ,self.handler)
+            self.lines.readfile()
         elif self.type == 'qe':
             self.lines = readqe.ReadQe(self.fname ,self.handler)
+            self.lines.readfile()
         elif self.type == 'gaussian':
             self.lines = readgaussian.ReadGaussian(self.fname ,self.handler)
+            self.lines.readfile()
         else:
             quit("Filetype handler not equal to known filetypes.")
-        #return self.lines
 def main(inarg):
     arguments = Arguments()
-    arguments.readargument(inarg)      
-    fileread = FileReader(arguments.fname, arguments.datareq)
+    arguments.readargument(inarg)     
+    fileread = FileReader(arguments.fname, int(arguments.datareq))
     fileread.findtype()
-    fileread.read().readfile().getdata()
+    fileread.read()
+    fileread.lines.getdata()
 main(sys.argv)
