@@ -1,7 +1,7 @@
 import os
 class ReadVasp:
     """ A class that handles the 'vasp' output files"""
-    def __init__(self,fname,handling = '111'):
+    def __init__(self,fname,handling = 7):
         """ Initialization of the class. Default settings"""
         self.fname = fname
         self.filename = os.getcwd() + "/" + self.fname
@@ -20,24 +20,23 @@ class ReadVasp:
             self.fline.append(i)
         print "Closing file '" + self.filename +"'."
         f.close()
-        #return self.fline
+        fline = self.fline
     def getdata(self):
-        for i in xrange(0,self.handling):
-            if i == 0 and self.handling[i] == '1':
-                atoms = self.getatoms()
-                continue
-            elif i == 1 and self.handling[i] == '1':
-                coor = self.getcoordinates()
-                continue
-            elif i == 2 and self.handling[i] == '1':
-                forces = self.getforce()
-                continue
+        if (self.handling & 4) == 4:
+            print "Getting atoms"
+            self.getatoms()
+        if (self.handling & 2) == 2:
+            print "getting positions"
+            self.getcoordinates()
+        if (self.handling & 1) == 1:
+            print "getting forces"
+            self.getforce()
     def getatoms(self):
-        """ Getting the list of atoms, if the first argument of the handling is 1."""
+        """ Getting the list of atoms."""
         pass
     def getcoordinates(self):
-        """ Getting coordinates coronsponding with the atoms, if the second argument of the handling is 1."""
+        """ Getting coordinates coronsponding with the atoms."""
         pass
     def getforce(self):
-        """ Fetching the forces coronsponding with the atoms, id the third argument of the handling is 1."""
+        """ Fetching the forces coronsponding with the atoms."""
         pass
