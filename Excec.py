@@ -29,7 +29,7 @@ class Arguments:
         self.fname = None
     def readargument(self,arguments):
         """ Provide the program with the correct handlers."""
-        self.datareq = str(int('000',2))    # 111 = 7 gives all data
+        self.datareq = int('000',2)         # 111 = 7 gives all data
                                             # 000 = 0 gives no data
                                             # 001 = 1 gives forces
                                             # 010 = 2 gives coordinates
@@ -47,18 +47,18 @@ class Arguments:
                 continue
             elif i == '--all' or i == '-a' or i == '':
                 print "All data requested by user."
-                self.datareq = str(int(self.datareq) | int('111',2))
+                self.datareq = self.datareq | int('111',2)
                 continue
             elif i == '-e' or i == '--element':
-                self.datareq = str(int(self.datareq) | int('100',2))
+                self.datareq = self.datareq | int('100',2)
                 print "Elemental data requested by user."
                 continue
             elif i == '--pos' or i == '--p':
-                self.datareq = str(int(self.datareq) | int('10',2))
+                self.datareq = self.datareq | int('10',2)
                 print "Positional data requested by user."
                 continue
             elif i == '--force' or i == '-f':
-                self.datareq = str(int(self.datareq) | int('1',2))
+                self.datareq = self.datareq | int('1',2)
                 print "Forces requested by user."
                 continue
             elif i == '-n' or i == '--name':
@@ -170,5 +170,5 @@ def main(inarg):
     fileread = FileReader(arguments.fname, int(arguments.datareq))
     fileread.findtype()
     fileread.read()
-    fileread.lines.getdata()
+    data = fileread.lines.getdata()
 main(sys.argv)
