@@ -1,4 +1,5 @@
 import os
+import re
 class ReadVasp:
     """ A class that handles the 'vasp' output files"""
     def __init__(self,fname,handling = 7):
@@ -20,7 +21,6 @@ class ReadVasp:
             self.fline.append(i)
         print "Closing file '" + self.filename +"'."
         f.close()
-        fline = self.fline
     def getdata(self):
         if (self.handling & 4) == 4:
             print "Getting atoms"
@@ -33,7 +33,30 @@ class ReadVasp:
             self.getforce()
     def getatoms(self):
         """ Getting the list of atoms."""
-        pass
+        for i in self.fline:
+            if re.search(r'poscar:',i,re.I):
+                self.atomarray = i.replace("}","").split("{")
+                break
+        for k in self.atomarray:
+                if re.search(r'VASPAtoms',k,re.I):
+                    self.atoms = k.replace(" ","").replace("\n","").split(":")
+        self.atomlist = []
+        self.atomnumber = []
+        for m in self.atoms[1]:
+            n = True
+            try:
+                numberofatoms = int(m)
+            except:
+                n = False
+            if n == True:
+                self.atomnumber.append(int(m))
+            else:
+                self.atomlist.append(str(m))
+        if len(self.atomlist) != len(self.atomnumber):
+            quit("The number of atoms is inconsistend with the times each atom appears in the outfile.")
+        self.totalatoms = 0
+        for i in self.atomnumber:
+            self.totalatoms += i
     def getcoordinates(self):
         """ Getting coordinates coronsponding with the atoms."""
         pass

@@ -14,10 +14,10 @@ import atom
 import vector
 import element
 import state
-import readadf
-import readvasp
-import readqe
-import readgaussian
+from readadf import ReadAdf
+from readvasp import ReadVasp
+from readqe import ReadQe
+from readgaussian import ReadGaussian
 """ The beginning of the program. """
 class Arguments:
     """ Defines the general behaviour of the program. """
@@ -90,20 +90,21 @@ class Output:
         self.filename = filename
         self.darray = darray
     def writefile(self, filename, darray): 
-        """ A function to write everythin to a external file.  """
+        """ Write everything to a external file.  """
         pass
 class Parser:
     """ A general data parser."""
-    def __init__(self, atom, posx, posy, posz, fx, fy, fz):
-        self.atoms = []
-        self.positions = []
-        self.forces = []
-    def organizedata(self, atom, posx, posy, posz, fx, fy, fz):
-        """ A function to organize all the data available.  """
-        pass
-
-    def makedarray(self, atoms, positions, forces):
-        """ A function to make the full array for all the data available.  """
+    def __init__(self, atoms = [], atomnumbers = [], pos = [], force = [],handler = 7):
+        self.atoms = atoms
+        self.atomnumbers = atomnumbers
+        self.pos = pos
+        self.force = force
+        self.handler = handler
+    def organizedata(self):
+        """ Organize all the data available and requested.  """
+    
+    def makedarray(self):
+        """ Make the array of all data available and requested. """
         pass
 class FileReader:
     """ Selecting the right type of method for reading the files
@@ -151,24 +152,27 @@ class FileReader:
         if self.type == None:
             quit("No filetype found in the file given to the program. Please make sure that your outputfile is supported. Use '-h' or '-help' to read the help manual. ")
         elif self.type == 'adf':
-            self.lines = readadf.ReadAdf(self.fname ,self.handler)
-            self.lines.readfile()
+            self.reader = ReadAdf(self.fname ,self.handler)
         elif self.type == 'vasp':
-            self.lines = readvasp.ReadVasp(self.fname ,self.handler)
-            self.lines.readfile()
+            self.reader = ReadVasp(self.fname ,self.handler)
         elif self.type == 'qe':
-            self.lines = readqe.ReadQe(self.fname ,self.handler)
-            self.lines.readfile()
+            self.reader = ReadQe(self.fname ,self.handler)
         elif self.type == 'gaussian':
-            self.lines = readgaussian.ReadGaussian(self.fname ,self.handler)
-            self.lines.readfile()
+            self.reader = ReadGaussian(self.fname ,self.handler)
         else:
             quit("Filetype handler not equal to known filetypes.")
+        self.reader.readfile()
+
 def main(inarg):
     arguments = Arguments()
     arguments.readargument(inarg)     
     fileread = FileReader(arguments.fname, int(arguments.datareq))
     fileread.findtype()
     fileread.read()
-    data = fileread.lines.getdata()
+    rawdata = fileread.reader
+    rawdata.getdata()
+    print "Total number of atoms: " + str(rawdata.totalatoms)
+    parser = Parser(rawdata.atomlist, rawdata.atomnumbersa)
+    #data = parser.data()
+    #data.printToScreen()
 main(sys.argv)
