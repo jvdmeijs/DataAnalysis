@@ -100,9 +100,12 @@ class Parser:
         self.pos = pos
         self.force = force
         self.handler = handler
+    def data(self):
+        """ Input for raw data."""
+        pass
     def organizedata(self):
         """ Organize all the data available and requested.  """
-    
+        pass
     def makedarray(self):
         """ Make the array of all data available and requested. """
         pass
@@ -172,7 +175,13 @@ def main(inarg):
     rawdata = fileread.reader
     rawdata.getdata()
     print "Total number of atoms: " + str(rawdata.totalatoms)
-    parser = Parser(rawdata.atomlist, rawdata.atomnumbersa)
-    #data = parser.data()
-    #data.printToScreen()
+    parser = Parser(rawdata.atomlist, rawdata.atomnumber, rawdata.position, rawdata.force)
+    print rawdata.atomlist
+    print ""
+    print rawdata.atomnumber
+    print ""
+    print rawdata.position
+    print ""
+    print rawdata.force
+    print "Number of states equals: " + str(len(rawdata.numberofstates))
 main(sys.argv)
