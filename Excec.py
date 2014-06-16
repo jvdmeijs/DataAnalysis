@@ -10,10 +10,10 @@ for subfolder in ['Atom','Element','State','readfiles']:
     if cmd_subfolder not in sys.path:
         sys.path.insert(0, cmd_subfolder)
 """ Importing custom classes"""
-import atom
-import vector
-import element
-import state
+from atom import Atom
+from vector import Vector
+from element import Element
+from state import State
 from readadf import ReadAdf
 from readvasp import ReadVasp
 from readqe import ReadQe
@@ -100,9 +100,56 @@ class Parser:
         self.pos = pos
         self.force = force
         self.handler = handler
+        self.atomlist = []
+        self.atominstance = []
+        self.state = 0
     def data(self):
         """ Input for raw data."""
-        pass
+        if (self.handler & 2) == 2 or (self.handler & 1) == 1:
+            if (len(self.pos) != len(self.force)) and len(self.pos) != 0  and len(self.force) != 0:
+                quit("The number of states cannot be determained. The forces and positions do not match!")
+            if len(self.pos)>0:
+                self.state = len(self.pos)
+            else:
+                self.state = len(self.force)
+            if self.state <= 0:
+                quit('No states found! There should be atleast one state. Please make sure output is correct!')
+        if (self.handler & 4) == 4: #Atom data requested.
+            print "Parsing atomic data."
+            for i in xrange(0,len(self.atomnumbers)):
+                n = 0
+                while n < self.atomnumbers[i]:
+                    self.atomlist.append(self.atoms[i]+str(n+1))
+                    n += 1
+            for i in xrange(0,len(self.atomlist)):
+                foo = self.atomlist[i]
+                self.atomlist[i] = Atom(foo)
+                self.atomlist[i].makeatom()
+            print "Parsing Completed"
+        if (self.handler & 2) == 2: #position data requested.
+            print "Parsing coordinates."
+            for statenr in xrange(0,self.state):
+                print "NEW STATE: " + str(statenr+1)
+                for atomnr in xrange(0,len(self.pos[statenr])):
+                    for coorid in xrange(0,len(self.pos[statenr][atomnr])):
+                        if coorid == 2:
+                            foo = self.pos[statenr][atomnr][coorid].replace('\n','').replace('\r','')
+                            self.pos[statenr][atomnr][coorid] = foo
+                    self.pos[statenr][atomnr].insert(0,atomnr)
+                self.pos[statenr] = State('p',self.pos[statenr])
+            print "Parsing completed."
+        if (self.handler & 1) == 1: #Force data reqested.
+            print "Parsing Forces."
+            for statenr in xrange(0,self.state):
+                print "NEW STATE: " + str(statenr+1)
+                for atomnr in xrange(0,len(self.force[statenr])):
+                    for coorid in xrange(0,len(self.force[statenr][atomnr])):
+                        if coorid == 2:
+                            foo = self.force[statenr][atomnr][coorid].replace('\n','').replace('\r','')
+                            self.force[statenr][atomnr][coorid] = foo
+                    self.force[statenr][atomnr].insert(0,atomnr)
+                self.force[statenr] = State('f',self.force[statenr])
+            print "Parsing Completed."
     def organizedata(self):
         """ Organize all the data available and requested.  """
         pass
@@ -175,6 +222,8 @@ def main(inarg):
     rawdata = fileread.reader
     rawdata.getdata()
     print "Total number of atoms: " + str(rawdata.totalatoms)
-    print "Total number of states requested: " + str(len(rawdata.numberofstates))
-    parser = Parser(rawdata.atomlist, rawdata.atomnumber, rawdata.position, rawdata.force)
+    if(len(rawdata.numberofstates)>0):print "Total number of states requested: " + str(len(rawdata.numberofstates))
+    parser = Parser(rawdata.atomlist, rawdata.atomnumber, rawdata.position, rawdata.force,int(arguments.datareq))
+    parser.data()
+    print parser.pos[1]
 main(sys.argv)

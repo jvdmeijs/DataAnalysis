@@ -1,6 +1,5 @@
 #!/bin/python
-
-class element:
+class Element:
 	def __init__(self,symbol):
 		self.symbol = symbol
 		file_name = getcwd().elements.txt
