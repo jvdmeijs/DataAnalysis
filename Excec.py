@@ -175,13 +175,6 @@ def main(inarg):
     rawdata = fileread.reader
     rawdata.getdata()
     print "Total number of atoms: " + str(rawdata.totalatoms)
+    print "Total number of states requested: " + str(len(rawdata.numberofstates))
     parser = Parser(rawdata.atomlist, rawdata.atomnumber, rawdata.position, rawdata.force)
-    print rawdata.atomlist
-    print ""
-    print rawdata.atomnumber
-    print ""
-    print rawdata.position
-    print ""
-    print rawdata.force
-    print "Number of states equals: " + str(len(rawdata.numberofstates))
 main(sys.argv)

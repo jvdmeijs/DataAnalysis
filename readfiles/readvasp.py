@@ -7,9 +7,14 @@ class ReadVasp:
         self.fname = fname
         self.filename = os.getcwd() + "/" + self.fname
         self.handling = handling
+        self.fline = []
+        self.atomlist = []
+        self.atomnumber = []
+        self.numberofstates = []
+        self.position = []
+        self.force = []
     def readfile(self):
         """ Reading of the outfile."""
-        self.fline = []
         try:
             f = open(self.filename,'r')
             f.close()
@@ -58,8 +63,6 @@ class ReadVasp:
         for k in self.atomarray:
                 if re.search(r'VASPAtoms',k,re.I):
                     self.atoms = k.replace(" ","").replace("\n","").split(":")
-        self.atomlist = []
-        self.atomnumber = []
         for m in xrange(0,len(self.atoms[1])):
             n = True
             last = True
@@ -89,7 +92,6 @@ class ReadVasp:
             self.totalatoms += i
     def getcoordinates(self):
         """ Getting coordinates coronsponding with the atoms."""
-        self.position = []
         for state in self.stateinfo:
             self.stateposition = []
             for line in state:
@@ -100,7 +102,6 @@ class ReadVasp:
 
     def getforce(self):
         """ Fetching the forces coronsponding with the atoms."""
-        self.force = []
         for state in self.stateinfo:
             self.stateforce = []
             for line in state:
