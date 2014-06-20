@@ -27,6 +27,8 @@ class Arguments:
         self.datareq = '000'
         self.readmode = None
         self.fname = None
+        self.mergename = None
+        self.merge = None
     def readargument(self,arguments):
         """ Provide the program with the correct handlers."""
         self.datareq = int('000',2)         # 111 = 7 gives all data
@@ -38,6 +40,10 @@ class Arguments:
         for i in arguments:
             if self.readmode == 'filename':
                 self.fname = i
+                self.readmode = None
+                continue
+            elif self.readmode == 'merge':
+                self.mergename = i
                 self.readmode = None
                 continue
             elif i == '-h' or i == '--help':
@@ -64,6 +70,11 @@ class Arguments:
             elif i == '-n' or i == '--name':
                 self.readmode = 'filename'
                 continue
+            elif i == '-m' or i == '--merge':
+                self.readmode == 'merge'
+                self.merge = 1
+            elif i == '-c' or i == '--clean':
+                self.merge = 0
             else:
                 self.help()
                 sys.exit()
@@ -80,7 +91,10 @@ class Arguments:
         print "After the '-n' or '--name' argument a filename must be given."
         print "Note that more than one handler can be used, with the exeption of -h' and '--help'. The '-a' and '--all' can only be used in comination with '-n' or '--name'."
         print "So if you for example want to request the positions and forces on the file 'out' use: ' -p -f -n out'."
-        print "The supported files are at this moment: Vasp, Quantum Esspresso, Gaussian and ADF."
+        print "The supported file types are at this moment: Vasp."# , Quantum Esspresso, Gaussian and ADF."
+        print "This program can produce clean oufiles with the '-c' '--clean' argument,"
+        print "or it can merge the data with another outfile produced by this program by using '-m [FILENAME]' or '--merge [FILENAME]'."
+        print "The default settings for this specific setting is: 'clean', so be sure to rename your file to prevent dataloss."
 class Output:
     """ This class creates a structurized file using all data available. 
     Using the general structure: atom, positions (posx posy posz),
