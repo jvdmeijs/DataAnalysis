@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python
 """ Importing the scrips necessary for the program.  """
 import os
 import re
