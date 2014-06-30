@@ -73,13 +73,17 @@ class Arguments:
                 self.readmode = 'filename'
                 continue
             elif i == '-m' or i == '--merge':
-                self.readmode == 'merge'
+                self.readmode = 'merge'
                 self.merge = 1
+                continue
             elif i == '-c' or i == '--clean':
                 self.merge = 0
+                continue
             elif i == "--augurk":
                 quit("MOAR PICKLES, according to cPickle the amount of consumed pickles is too damn high.")
+                continue
             else:
+                print "Argument '"+i+ "' not a valid argument."
                 self.help()
                 sys.exit()
     def help(self):
@@ -109,14 +113,11 @@ class Output:
         self.darray = darray
     def writefile(self): 
         """ Write everything to a external file.  """
-        if self.handler == 0 or self.handler == None:
-            print "Generating a clean file."
-            self.cleanfile()
-            print "Generating completed."
-        elif self.handler == 1 and self.filename != None:
+        if self.handler == 1 and self.filename != None:
+            print "Merging the files."
             self.mergefile()
-    def cleanfile(self):
-        """ Writing the a clean file. """
+        else:
+            print "Generating a clean file."
         date = str(datetime.datetime.now()).replace(':','').replace(' ','').replace('-','').replace('.','')
         augurk = cPickle.dumps(self.darray)
         picklename = 'PickledFileOutput' + date
@@ -160,7 +161,28 @@ class Output:
         f.close()
         print "All data written to: " + filename
     def mergefile(self):
-        pass
+        print "Opening Pickled file."
+        try:
+            f = open(os.getcwd()+"/"+self.filename,'r')
+            f.close()
+        except:
+            quit("Pickled filename incorrect, please try again and make sure the filename is correct.")
+        f = open(os.getcwd()+'/'+self.filename)
+        olddata = cPickle.load(f)
+        f.close()
+        print "Closing Pickled file."
+        print "Combining all data."
+        nratoms = len(olddata[0])
+        nrstates = len(olddata[1])
+        for atoms in self.darray[0]:
+            atoms.id = atoms.id + nratoms
+        for states in self.darray[1]:
+            for atom in states.output:
+                atom[0] = atom[0] + nratoms
+            states.stateid = states.stateid +  nrstates
+        self.darray[0] = olddata[0] + self.darray[0]
+        self.darray[1] = olddata[1] + self.darray[1]
+        print "All data combined."
 class Parser:
     """ A general data parser."""
     def __init__(self, atoms = [], atomnumbers = [], pos = [], force = [],handler = 7):
