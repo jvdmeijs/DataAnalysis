@@ -4,6 +4,8 @@ import os
 import re
 import sys
 import inspect
+import cPickle
+import datetime
 """ Parsing subdirs to sys.path. """
 for subfolder in ['Atom','Element','State','readfiles']:
     cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],subfolder)))
@@ -59,7 +61,7 @@ class Arguments:
                 self.datareq = self.datareq | int('100',2)
                 print "Elemental data requested by user."
                 continue
-            elif i == '--pos' or i == '--p':
+            elif i == '--pos' or i == '-p':
                 self.datareq = self.datareq | int('10',2)
                 print "Positional data requested by user."
                 continue
@@ -75,6 +77,8 @@ class Arguments:
                 self.merge = 1
             elif i == '-c' or i == '--clean':
                 self.merge = 0
+            elif i == "--augurk":
+                quit("MOAR PICKLES, according to cPickle the amount of consumed pickles is too damn high.")
             else:
                 self.help()
                 sys.exit()
@@ -94,17 +98,68 @@ class Arguments:
         print "The supported file types are at this moment: Vasp."# , Quantum Esspresso, Gaussian and ADF."
         print "This program can produce clean oufiles with the '-c' '--clean' argument,"
         print "or it can merge the data with another outfile produced by this program by using '-m [FILENAME]' or '--merge [FILENAME]'."
-        print "The default settings for this specific setting is: 'clean', so be sure to rename your file to prevent dataloss."
+        print "The default settings for this specific setting is: 'clean', so be sure to rename your file to prevent data loss."
 class Output:
     """ This class creates a structurized file using all data available. 
     Using the general structure: atom, positions (posx posy posz),
     force (posx posy posz).  """
-    def __init__(self, cwd, filename, darray):
-        self.cwd = cwd
+    def __init__(self, handler, darray, filename = None):
+        self.handler = handler
         self.filename = filename
         self.darray = darray
-    def writefile(self, filename, darray): 
+    def writefile(self): 
         """ Write everything to a external file.  """
+        if self.handler == 0 or self.handler == None:
+            print "Generating a clean file."
+            self.cleanfile()
+            print "Generating completed."
+        elif self.handler == 1 and self.filename != None:
+            self.mergefile()
+    def cleanfile(self):
+        """ Writing the a clean file. """
+        date = str(datetime.datetime.now()).replace(':','').replace(' ','').replace('-','').replace('.','')
+        augurk = cPickle.dumps(self.darray)
+        picklename = 'PickledFileOutput' + date
+        fileloc = os.getcwd()+'/'+picklename
+        print "Writing all class data."
+        f = open(fileloc,'w+')
+        f.write(augurk)
+        f.close
+        print "All class data is written to: "+ fileloc
+        filename = os.getcwd() + '/state_output' + date
+        avail = [False,False]
+        if self.darray[0] != 0:
+            avail[0] = True
+        if self.darray[1] != 0:
+            avail[1] = True
+        print "Writing all data to hrf:"
+        f = open(filename,'w+')
+        if avail[0] == True:
+            for i in xrange(0,len(self.darray[0])):
+                line = str(int(self.darray[0][i].id))+' '+str(self.darray[0][i].atomname)+' '+str(self.darray[0][i].fullname)+' '+str(self.darray[0][i].atomprotons) + '\n'
+                if i == 0:
+                    f.write("Atoms:\n")
+                f.write(line)
+        if avail[1] == True:
+            for state in xrange(0,len(self.darray[1])):
+                if state == 0:
+                    f.write('States:\n')
+                f.write('State: '+str(state)+'\n')
+                for atom in xrange(0,len(self.darray[1][state].output)):
+                    line = ''
+                    for iden in xrange(0,len(self.darray[1][state].output[atom])):
+                        if iden == 0:
+                            atomname = str()
+                            for at in self.darray[0]:
+                                if int(at.id) == int(self.darray[1][state].output[atom][iden]):
+                                    atomname = at.atomname
+                            line  = line + atomname + ' '
+                        else:
+                            line = line + str(self.darray[1][state].output[atom][iden]) + ' '
+                    f.write(line + '\n')
+        f.close()
+        print "All data written to: " + filename
+    def mergefile(self):
         pass
 class Parser:
     """ A general data parser."""
@@ -116,6 +171,7 @@ class Parser:
         self.handler = handler
         self.atomlist = []
         self.atominstance = []
+        self.states = []
         self.state = 0
     def data(self):
         """ Input for raw data."""
@@ -130,46 +186,70 @@ class Parser:
                 quit('No states found! There should be atleast one state. Please make sure output is correct!')
         if (self.handler & 4) == 4: #Atom data requested.
             print "Parsing atomic data."
+            aid = 0
             for i in xrange(0,len(self.atomnumbers)):
                 n = 0
                 while n < self.atomnumbers[i]:
-                    self.atomlist.append(self.atoms[i]+str(n+1))
+                    self.atomlist.append(self.atoms[i]+str(aid))
                     n += 1
+                    aid += 1
             for i in xrange(0,len(self.atomlist)):
                 foo = self.atomlist[i]
                 self.atomlist[i] = Atom(foo)
                 self.atomlist[i].makeatom()
             print "Parsing Completed"
-        if (self.handler & 2) == 2: #position data requested.
+        if (self.handler & 2) == 2 and (self.handler & 1) != 1: #position data requested.
             print "Parsing coordinates."
             for statenr in xrange(0,self.state):
-                print "NEW STATE: " + str(statenr+1)
                 for atomnr in xrange(0,len(self.pos[statenr])):
                     for coorid in xrange(0,len(self.pos[statenr][atomnr])):
                         if coorid == 2:
                             foo = self.pos[statenr][atomnr][coorid].replace('\n','').replace('\r','')
                             self.pos[statenr][atomnr][coorid] = foo
                     self.pos[statenr][atomnr].insert(0,atomnr)
-                self.pos[statenr] = State('p',self.pos[statenr])
+                foo = self.pos[statenr]
+                self.pos[statenr] = State(foo,None,statenr,'p')
+                self.pos[statenr].makestate()
+                self.states = self.pos
             print "Parsing completed."
-        if (self.handler & 1) == 1: #Force data reqested.
+        if (self.handler & 1) == 1 and (self.handler & 2) != 2: #Force data reqested.
             print "Parsing Forces."
             for statenr in xrange(0,self.state):
-                print "NEW STATE: " + str(statenr+1)
                 for atomnr in xrange(0,len(self.force[statenr])):
                     for coorid in xrange(0,len(self.force[statenr][atomnr])):
                         if coorid == 2:
                             foo = self.force[statenr][atomnr][coorid].replace('\n','').replace('\r','')
                             self.force[statenr][atomnr][coorid] = foo
                     self.force[statenr][atomnr].insert(0,atomnr)
-                self.force[statenr] = State('f',self.force[statenr])
+                foo = self.force[statenr]
+                self.force[statenr] = State(None,foo,statenr,'f')
+                self.force[statenr].makestate()
+                self.states = self.force
             print "Parsing Completed."
-    def organizedata(self):
-        """ Organize all the data available and requested.  """
-        pass
+        if (self.handler & 2) == 2 and (self.handler & 1) == 1:
+            print "Parsing complete states:"
+            for statenr in xrange(0,self.state):
+                for atomnr in xrange(0,len(self.force[statenr])):
+                    for coorid in xrange(0,len(self.force[statenr][atomnr])):
+                        if coorid == 2:
+                            foo = self.force[statenr][atomnr][coorid].replace('\n','').replace('\r','')
+                            self.force[statenr][atomnr][coorid] = foo
+                            fooo = self.pos[statenr][atomnr][coorid].replace('\n','').replace('\r','')
+                            self.pos[statenr][atomnr][coorid] = fooo
+                    self.pos[statenr][atomnr].insert(0,atomnr)
+                self.states.append(State(self.pos[statenr],self.force[statenr],statenr,'c'))
+                self.states[-1].makestate()
+            print "Parsing Completed."
     def makedarray(self):
-        """ Make the array of all data available and requested. """
-        pass
+        self.darray = []
+        if len(self.atomlist)>0:
+            self.darray.append(self.atomlist)
+        else:
+            self.darray.append(0)
+        if len(self.states)>0:
+            self.darray.append(self.states)
+        else:
+            self.darray.append(0)
 class FileReader:
     """ Selecting the right type of method for reading the files
         given to the program.  """
@@ -235,9 +315,13 @@ def main(inarg):
     fileread.read()
     rawdata = fileread.reader
     rawdata.getdata()
-    print "Total number of atoms: " + str(rawdata.totalatoms)
+    if rawdata.totalatoms>0:
+        print "Total number of atoms: " + str(rawdata.totalatoms)
     if(len(rawdata.numberofstates)>0):print "Total number of states requested: " + str(len(rawdata.numberofstates))
     parser = Parser(rawdata.atomlist, rawdata.atomnumber, rawdata.position, rawdata.force,int(arguments.datareq))
     parser.data()
-    print parser.pos[1]
+    parser.makedarray()
+    alldata = parser.darray
+    output = Output(arguments.merge, alldata, arguments.mergename)
+    output.writefile()
 main(sys.argv)
