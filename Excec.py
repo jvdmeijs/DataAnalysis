@@ -32,13 +32,14 @@ class Arguments:
         self.merge = None
     def readargument(self,arguments):
         """ Provide the program with the correct handlers."""
-        self.datareq = int('000',2)         # 111 = 7 gives all data
-                                            # 000 = 0 gives no data
-                                            # 001 = 1 gives forces
-                                            # 010 = 2 gives coordinates
-                                            # 100 = 4 gives atoms
+        self.datareq = int('000',2)         # 1111 = 7 gives all data
+                                            # 0000 = 0 gives no data
+                                            # 0001 = 1 gives forces
+                                            # 0010 = 2 gives coordinates
+                                            # 0100 = 4 gives atoms
+                                            # 1000 = 8 gives lattice vectors
                                             # a sum of the bits gives both the attributes.
-        for i in arguments:
+        for i in arguments[1:]:
             if self.readmode == 'filename':
                 self.fname = i
                 self.readmode = None
@@ -50,8 +51,6 @@ class Arguments:
             elif i == '-h' or i == '--help':
                 self.help()
                 sys.exit()
-            elif i == 'Excec.py':
-                continue
             elif i == '--all' or i == '-a' or i == '':
                 self.datareq = self.datareq | int('1111',2)
                 continue
