@@ -12,38 +12,39 @@ Output files that the support will be build for in the future:
 -Gaussian
 
 The output file from the program looks like this (general structure)
-
->Atoms:
->0  X  Fullname AtomNumber
->1  X  Fullname AtomNumber
->.. .. ..       ..
->n  Y  Fullname AtomNumber
->States:
->State 0
->X	positions (x,y,z) forces (x,y,z)
->X	positions (x,y,z) forces (x,y,z)
->..	..                ..
->Y	positions (x,y,z) forces (x,y,z)
->State 1
->X	positions (x,y,z) forces (x,y,z)
->X	positions (x,y,z) forces (x,y,z)
->..	..                ..
->Y	positions (x,y,z) forces (x,y,z)
->Lattice a vector (x,y,z)
->Lattice b vector (x,y,z)
->Lattice c vector (x,y,z)
->state ...
->...	...	...
->...	...	...
->...	...	...
->state N
->X	positions (x,y,z) forces (x,y,z)
->X	positions (x,y,z) forces (x,y,z)
->..	..                ..
->Y	positions (x,y,z) forces (x,y,z)
->Lattice a vector (x,y,z)
->Lattice b vector (x,y,z)
->Lattice c vector (x,y,z)
+```
+Atoms:
+0  X  Fullname AtomNumber
+1  X  Fullname AtomNumber
+.. .. ..       ..
+n  Y  Fullname AtomNumber
+States:
+State 0
+X	positions (x,y,z) forces (x,y,z)
+X	positions (x,y,z) forces (x,y,z)
+..	..                ..
+Y	positions (x,y,z) forces (x,y,z)
+State 1
+X	positions (x,y,z) forces (x,y,z)
+X	positions (x,y,z) forces (x,y,z)
+..	..                ..
+Y	positions (x,y,z) forces (x,y,z)
+Lattice a vector (x,y,z)
+Lattice b vector (x,y,z)
+Lattice c vector (x,y,z)
+state ...
+...	...	...
+...	...	...
+...	...	...
+state N
+X	positions (x,y,z) forces (x,y,z)
+X	positions (x,y,z) forces (x,y,z)
+..	..                ..
+Y	positions (x,y,z) forces (x,y,z)
+Lattice a vector (x,y,z)
+Lattice b vector (x,y,z)
+Lattice c vector (x,y,z)
+```
 
 A quick guide to using the program:
 running the program can be done using: ".\Excec.py" or "python Excec.py"
