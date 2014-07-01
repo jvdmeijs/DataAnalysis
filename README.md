@@ -1,3 +1,6 @@
+Data Analysis
+=============
+
 A program for RDFX data analysis using python.
 This program is a quick way to generate a trajectory file from a output.
 
