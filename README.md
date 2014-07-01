@@ -4,12 +4,12 @@ Data Analysis
 A program for RDFX data analysis using python.
 This program is a quick way to generate a trajectory file from a output.
 
-The supported input files at this moment are:
--Vasp
-Output files that the support will be build for in the future:
--ADF
--QE
--Gaussian
+The supported input files at this moment are: 
+Vasp; 
+Output files that the support will be build for in the future: 
+ADF; 
+QE; 
+Gaussian; 
 
 The output file from the program looks like this (general structure)
 ```
