@@ -1,8 +1,5 @@
 class Vector:
-	def __init__(self,xx,yy,zz):
-		self.xx = xx
-		self.yy = yy
-		self.zz = zz
-		self.vector = []
-	def makevec(self):
-		self.vector = [self.xx,self.yy,self,zz]
+	def __init__(self,lattice):
+		""" A class to do calculations on the lattice vectors if needed. Obsolete at the moment."""
+		self.lattice = lattice
+		self.states = len(lattice)

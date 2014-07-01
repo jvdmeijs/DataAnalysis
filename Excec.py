@@ -53,20 +53,19 @@ class Arguments:
             elif i == 'Excec.py':
                 continue
             elif i == '--all' or i == '-a' or i == '':
-                print "All data requested by user."
-                self.datareq = self.datareq | int('111',2)
+                self.datareq = self.datareq | int('1111',2)
                 continue
             elif i == '-e' or i == '--element':
                 self.datareq = self.datareq | int('100',2)
-                print "Elemental data requested by user."
                 continue
             elif i == '--pos' or i == '-p':
                 self.datareq = self.datareq | int('10',2)
-                print "Positional data requested by user."
                 continue
             elif i == '--force' or i == '-f':
                 self.datareq = self.datareq | int('1',2)
-                print "Forces requested by user."
+                continue
+            elif i == '-l' or i == '--latice':
+                self.datareq = self.datareq | int('1000',2)
                 continue
             elif i == '-n' or i == '--name':
                 self.readmode = 'filename'
@@ -78,11 +77,10 @@ class Arguments:
             elif i == '-c' or i == '--clean':
                 self.merge = 0
                 continue
-            elif i == "--augurk":
-                quit("MOAR PICKLES, according to cPickle the amount of consumed pickles is too damn high.")
-                continue
             else:
                 print "Argument '"+i+ "' not a valid argument."
+                print
+                print "Here is the help function [--help]"
                 self.help()
                 sys.exit()
     def help(self):
@@ -118,20 +116,22 @@ class Output:
         else:
             print "Generating a clean file."
         date = str(datetime.datetime.now()).replace(':','').replace(' ','').replace('-','').replace('.','')
-        augurk = cPickle.dumps(self.darray)
+        allavaildata = cPickle.dumps(self.darray)
         picklename = 'PickledFileOutput' + date
         fileloc = os.getcwd()+'/'+picklename
         print "Writing all class data."
         f = open(fileloc,'w+')
-        f.write(augurk)
+        f.write(allavaildata)
         f.close
         print "All class data is written to: "+ fileloc
         filename = os.getcwd() + '/state_output' + date
-        avail = [False,False]
+        avail = [False,False,False]
         if self.darray[0] != 0:
             avail[0] = True
         if self.darray[1] != 0:
             avail[1] = True
+        if self.darray[2] != 0:
+            avail[2] = True
         print "Writing all data to hrf:"
         f = open(filename,'w+')
         if avail[0] == True:
@@ -157,6 +157,13 @@ class Output:
                         else:
                             line = line + str(self.darray[1][state].output[atom][iden]) + ' '
                     f.write(line + '\n')
+                if avail[2] == True:
+                    n = 0
+                    line = ''
+                    while n<3:
+                        line  = line  + self.darray[2][state][n] + '\n'
+                        n += 1
+                    f.write(line)
         f.close()
         print "All data written to: " + filename
     def mergefile(self):
@@ -181,15 +188,17 @@ class Output:
             states.stateid = states.stateid +  nrstates
         self.darray[0] = olddata[0] + self.darray[0]
         self.darray[1] = olddata[1] + self.darray[1]
+        self.darray[2] = olddata[2] + self.darray[2]
         print "All data combined."
 class Parser:
     """ A general data parser."""
-    def __init__(self, atoms = [], atomnumbers = [], pos = [], force = [],handler = 7):
+    def __init__(self, atoms = [], atomnumbers = [], pos = [], force = [], lattice = [], handler = 7):
         self.atoms = atoms
         self.atomnumbers = atomnumbers
         self.pos = pos
         self.force = force
         self.handler = handler
+        self.lattice = lattice
         self.atomlist = []
         self.atominstance = []
         self.states = []
@@ -261,6 +270,10 @@ class Parser:
                 self.states.append(State(self.pos[statenr],self.force[statenr],statenr,'c'))
                 self.states[-1].makestate()
             print "Parsing Completed."
+        if (self.handler & 8 ) == 8 and len(self.lattice) != 0:
+            print "Parsing Lattice parameters:"
+            self.lattice_list = Vector(self.lattice)
+            print "Parsing Lattice parameters completed."
     def makedarray(self):
         self.darray = []
         if len(self.atomlist)>0:
@@ -269,6 +282,10 @@ class Parser:
             self.darray.append(0)
         if len(self.states)>0:
             self.darray.append(self.states)
+        else:
+            self.darray.append(0)
+        if len(self.lattice_list.lattice)>0:
+            self.darray.append(self.lattice_list.lattice)
         else:
             self.darray.append(0)
 class FileReader:
@@ -339,7 +356,7 @@ def main(inarg):
     if rawdata.totalatoms>0:
         print "Total number of atoms: " + str(rawdata.totalatoms)
     if(len(rawdata.numberofstates)>0):print "Total number of states requested: " + str(len(rawdata.numberofstates))
-    parser = Parser(rawdata.atomlist, rawdata.atomnumber, rawdata.position, rawdata.force,int(arguments.datareq))
+    parser = Parser(rawdata.atomlist, rawdata.atomnumber, rawdata.position, rawdata.force,rawdata.lattice,int(arguments.datareq))
     parser.data()
     parser.makedarray()
     alldata = parser.darray

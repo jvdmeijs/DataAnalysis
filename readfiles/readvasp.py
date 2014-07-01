@@ -20,17 +20,13 @@ class ReadVasp:
             f.close()
         except:
             quit("File: '" + self.filename +"' not found! Please make sure it is in the correct directory.")
-        print "Opening file '" + self.filename +"'."
         f = open(self.filename,'r')
         for i in f.readlines():
             self.fline.append(i)
-        print "Closing file '" + self.filename +"'."
         f.close()
     def getdata(self):
         if (self.handling & 4) == 4:
-            print "Getting atoms"
             self.getatoms()
-            print "Atoms found!"
         # Fetching Lines where a new state begins:
         if ((self.handling & 2) == 2) or ((self.handling & 1) == 1):
             self.stateinfo = []
@@ -47,13 +43,11 @@ class ReadVasp:
                 self.stateinfo.append(self.state)
         #Fetching information needed from the states:
         if (self.handling & 2) == 2:
-            print "Getting coordinates"
             self.getcoordinates()
-            print "Coordinates found!"
         if (self.handling & 1) == 1:
-            print "Getting forces"
             self.getforce()
-            print "Forces found!"
+        if (self.handling & 8) == 8:
+            self.getlattice()
     def getatoms(self):
         """ Getting the list of atoms."""
         for i in self.fline:
@@ -99,7 +93,6 @@ class ReadVasp:
                 self.positionOnly = [positionList[1], positionList[2], positionList[3]]
                 self.stateposition.append(self.positionOnly)
             self.position.append(self.stateposition)
-
     def getforce(self):
         """ Fetching the forces coronsponding with the atoms."""
         for state in self.stateinfo:
@@ -108,4 +101,22 @@ class ReadVasp:
                 forceList = line.replace("      ", " ").replace("     ", " ").replace("    ", " ").replace("   ", " ").replace("  ", " ").split(" ")
                 self.forceOnly = [forceList[4], forceList[5], forceList[6]]
                 self.stateforce.append(self.forceOnly)
-            self.force.append(self.stateforce) 
+            self.force.append(self.stateforce)
+    def getlattice(self):
+        """ Fetching the lattice vectors for each state."""
+        self.lattice = []
+        for k in xrange(0,len(self.fline)):
+            a = 'a'
+            b = 'b'
+            c = 'c'
+            latticelist = [a,b,c]
+            if re.search(r'direct lattice vectors',self.fline[k],re.I|re.M) and re.search('VOLUME',self.fline[k-4],re.I|re.M):
+                a = self.fline[k+1].split()
+                b = self.fline[k+2].split()
+                c = self.fline[k+3].split()
+                a = a[0] + ' ' + a[1] + ' ' + a[2]
+                b = b[0] + ' ' + b[1] + ' ' + b[2]
+                c = c[0] + ' ' + c[1] + ' ' + c[2]
+                latticelist = [a,b,c]
+            if latticelist != ['a','b','c']:
+                self.lattice.append(latticelist)
