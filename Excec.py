@@ -98,12 +98,14 @@ class Arguments:
         print "The supported file types are at this moment: Vasp."# , Quantum Esspresso, Gaussian and ADF."
         print "This program can produce clean oufiles with the '-c' '--clean' argument,"
         print "or it can merge the data with another outfile produced by this program by using '-m [FILENAME]' or '--merge [FILENAME]'."
-        print "The default settings for this specific setting is: 'clean', so be sure to rename your file to prevent data loss."
+        print "The default settings for this specific setting is: 'clean'"
+        print "The program generates unique names for the files it produces. Renaming in not necessary but recommended if you want to keep things clear."
 class Output:
     """ This class creates a structurized file using all data available. 
     Using the general structure: atom, positions (posx posy posz),
     force (posx posy posz).  """
     def __init__(self, handler, darray, filename = None):
+        """Init function."""
         self.handler = handler
         self.filename = filename
         self.darray = darray
@@ -166,6 +168,7 @@ class Output:
         f.close()
         print "All data written to: " + filename
     def mergefile(self):
+        """Merging a file if needed."""
         print "Opening Pickled file."
         try:
             f = open(os.getcwd()+"/"+self.filename,'r')
@@ -192,6 +195,7 @@ class Output:
 class Parser:
     """ A general data parser."""
     def __init__(self, atoms = [], atomnumbers = [], pos = [], force = [], lattice = [], handler = 7):
+        """Init function."""
         self.atoms = atoms
         self.atomnumbers = atomnumbers
         self.pos = pos
@@ -269,11 +273,12 @@ class Parser:
                 self.states.append(State(self.pos[statenr],self.force[statenr],statenr,'c'))
                 self.states[-1].makestate()
             print "Parsing Completed."
-        if (self.handler & 8 ) == 8 and len(self.lattice) != 0:
+        if (self.handler & 8 ) == 8 and len(self.lattice) != 0: #Lattice data requested.
             print "Parsing Lattice parameters:"
             self.lattice_list = Vector(self.lattice)
             print "Parsing Lattice parameters completed."
     def makedarray(self):
+        """Making the data array for the output file."""
         self.darray = []
         if len(self.atomlist)>0:
             self.darray.append(self.atomlist)
@@ -330,6 +335,7 @@ class FileReader:
                 break
         f.close()
     def read(self):
+        """Reading the output file (or input for the program) and selecting the correct file reader."""
         if self.type == None:
             quit("No filetype found in the file given to the program. Please make sure that your outputfile is supported. Use '-h' or '-help' to read the help manual. ")
         elif self.type == 'adf':
@@ -345,6 +351,7 @@ class FileReader:
         self.reader.readfile()
 
 def main(inarg):
+    """The main program:"""
     arguments = Arguments()
     arguments.readargument(inarg)     
     fileread = FileReader(arguments.fname, int(arguments.datareq))
@@ -361,4 +368,5 @@ def main(inarg):
     alldata = parser.darray
     output = Output(arguments.merge, alldata, arguments.mergename)
     output.writefile()
+"""The execution:"""
 main(sys.argv)
