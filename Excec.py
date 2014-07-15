@@ -32,7 +32,7 @@ class Arguments:
         self.merge = None
     def readargument(self,arguments):
         """ Provide the program with the correct handlers."""
-        self.datareq = int('000',2)         # 1111 = 7 gives all data
+        self.datareq = int('000',2)         # 1111 = 15 gives all data
                                             # 0000 = 0 gives no data
                                             # 0001 = 1 gives forces
                                             # 0010 = 2 gives coordinates
